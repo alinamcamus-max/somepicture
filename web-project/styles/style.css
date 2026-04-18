@@ -1,0 +1,46 @@
+body {
+  font-family: 'Arial Narrow', Arial, sans-serif;
+  background: #b3c6f7; /* azul pastel */
+  color: #3d0066;      /* morado oscuro */
+  margin: 30px;
+}
+#auth-section, #main-section {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 500px;
+  margin: auto;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+input, button {
+  margin: 5px 0;
+  padding: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: 'Arial Narrow', Arial, sans-serif;
+}
+button {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+button:hover {
+  background: #1565c0;
+}
+#videos-list video {
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 10px;
+  display: block;
+}
+#chat-section {
+  margin-top: 20px;
+}
+#chat-messages {
+  background: #fafafa;
+  padding: 10px;
+  border-radius: 4px;
+}

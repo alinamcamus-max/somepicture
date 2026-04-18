@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Sube y Mira Videos</title>
+  <link rel="stylesheet" href="styles/style.css">
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <div id="auth-section">
+    <h2>Iniciar sesión / Registrarse</h2>
+    <input type="email" id="email" placeholder="Correo electrónico">
+    <input type="password" id="password" placeholder="Contraseña">
+    <button onclick="login()">Iniciar sesión</button>
+    <button onclick="register()">Registrarse</button>
+    <button onclick="logout()" style="display:none;" id="logout-btn">Cerrar sesión</button>
+    <p id="auth-msg"></p>
+  </div>
+
+  <div id="main-section" style="display:none;">
+    <h2>Subir Video</h2>
+    <input type="file" id="video-upload" accept="video/*">
+    <button onclick="uploadVideo()">Subir</button>
+    <p id="upload-msg"></p>
+
+    <h2>Videos</h2>
+    <div id="videos-list"></div>
+
+    <h2>Chat con el Creador</h2>
+    <div id="chat-section">
+      <div id="chat-messages" style="height:200px;overflow-y:auto;border:1px solid #ccc;margin-bottom:10px;"></div>
+      <input type="text" id="chat-input" placeholder="Escribe tu mensaje...">
+      <button onclick="sendMessage()">Enviar</button>
+    </div>
+  </div>
+
+  <script src="scripts/main.js"></script>
+</body>
+</html>
