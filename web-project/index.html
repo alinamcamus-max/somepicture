@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Registro de Usuarios</title>
+    <link rel="stylesheet" href="../styles/style.ccs">
+</head>
+<body>
+    <div class="container">
+        <div class="form-section">
+            <h1>Registro de Usuario</h1>
+            
+            <form id="registroForm" class="registro-form">
+                <div class="form-group">
+                    <label for="nombre">Nombre Completo:</label>
+                    <input type="text" id="nombre" name="nombre" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Correo Electrónico:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="contraseña">Contraseña:</label>
+                    <input type="password" id="contraseña" name="contraseña" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmarContraseña">Confirmar Contraseña:</label>
+                    <input type="password" id="confirmarContraseña" name="confirmarContraseña" required>
+                </div>
+
+                <button type="submit" class="btn-submit">Registrarse</button>
+            </form>
+
+            <div id="mensaje" class="mensaje"></div>
+        </div>
+
+        <div class="usuarios-section">
+            <h2>Usuarios Registrados</h2>
+            <div class="btn-group">
+                <button id="limpiarLS" class="btn-limpiar">Limpiar localStorage</button>
+            </div>
+            <div id="listadoUsuarios" class="listado-usuarios">
+                <p class="vacio">No hay usuarios registrados aún</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="./script.js"></script>
+</body>
+</html>

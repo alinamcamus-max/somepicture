@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Usuario</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .link-section {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .link-section a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .link-section a:hover {
+            text-decoration: underline;
+        }
+
+        .error {
+            background-color: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .success {
+            background-color: #efe;
+            color: #3c3;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error.show, .success.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="registerForm">
+            <h1>Crear Cuenta</h1>
+            <div class="error" id="errorMsg"></div>
+            <div class="success" id="successMsg"></div>
+
+            <form id="formRegistro">
+                <div class="form-group">
+                    <label for="nombre">Nombre Completo</label>
+                    <input type="text" id="nombre" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Correo Electrónico</label>
+                    <input type="email" id="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirmar Contraseña</label>
+                    <input type="password" id="confirmPassword" required>
+                </div>
+
+                <button type="submit">Registrarse</button>
+            </form>
+
+            <div class="link-section">
+                ¿Ya tienes cuenta? <a onclick="irAlLogin()">Inicia sesión aquí</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Obtener elementos del DOM
+        const formRegistro = document.getElementById('formRegistro');
+        const errorMsg = document.getElementById('errorMsg');
+        const successMsg = document.getElementById('successMsg');
+
+        // Evento del formulario
+        formRegistro.addEventListener('submit', function(e) {
+            e.preventDefault();
+            registrarUsuario();
+        });
+
+        function registrarUsuario() {
+            const nombre = document.getElementById('nombre').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Limpiar mensajes
+            errorMsg.classList.remove('show');
+            successMsg.classList.remove('show');
+
+            // Validaciones
+            if (!nombre || !email || !password || !confirmPassword) {
+                mostrarError('Todos los campos son requeridos');
+                return;
+            }
+
+            if (!validarEmail(email)) {
+                mostrarError('El correo electrónico no es válido');
+                return;
+            }
+
+            if (password.length < 6) {
+                mostrarError('La contraseña debe tener al menos 6 caracteres');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                mostrarError('Las contraseñas no coinciden');
+                return;
+            }
+
+            // Obtener usuarios registrados
+            let usuarios = obtenerUsuarios();
+
+            // Verificar si el email ya existe
+            if (usuarios.some(u => u.email === email)) {
+                mostrarError('Este correo electrónico ya está registrado');
+                return;
+            }
+
+            // Crear nuevo usuario
+            const nuevoUsuario = {
+                id: Date.now(),
+                nombre: nombre,
+                email: email,
+                password: password,
+                fechaRegistro: new Date().toLocaleString('es-ES')
+            };
+
+            // Guardar usuario
+            usuarios.push(nuevoUsuario);
+            localStorage.setItem('usuarios_registrados', JSON.stringify(usuarios));
+
+            // Mostrar éxito
+            mostrarExito('¡Cuenta creada exitosamente! Redirigiendo al login...');
+            
+            // Limpiar formulario
+            formRegistro.reset();
+
+            // Redirigir al login después de 2 segundos
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 2000);
+        }
+
+        function validarEmail(email) {
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return regex.test(email);
+        }
+
+        function obtenerUsuarios() {
+            const usuarios = localStorage.getItem('usuarios_registrados');
+            return usuarios ? JSON.parse(usuarios) : [];
+        }
+
+        function mostrarError(mensaje) {
+            errorMsg.textContent = mensaje;
+            errorMsg.classList.add('show');
+        }
+
+        function mostrarExito(mensaje) {
+            successMsg.textContent = mensaje;
+            successMsg.classList.add('show');
+        }
+
+        function irAlLogin() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
