@@ -1,4 +1,7 @@
-body {
+/* filepath: c:\Users\Dell\Documents\GitHub\somepicture\web-project\styles\style.css */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@700&display=swap');
+
+body{
   font-family: 'Arial Narrow', Arial, sans-serif;
   background: #b3c6f7; /* azul pastel */
   color: #3d0066;      /* morado oscuro */
@@ -43,4 +46,8 @@ button:hover {
   background: #fafafa;
   padding: 10px;
   border-radius: 4px;
+}/* Solo para principal.html */
+body.principal, body.principal h1, body.principal p, body.principal a {
+  font-family: 'Noto Sans Georgian', Arial, sans-serif;
+  font-weight: 700;
 }
