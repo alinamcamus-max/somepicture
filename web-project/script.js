@@ -162,5 +162,37 @@ function mostrarMensaje(texto, tipo) {
 
 // Generar un ID único
 function generarId() {
-    return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  
+  return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  function uploadVideo() {
+  const file = document.getElementById('video-upload').files[0];
+  const title = document.getElementById('video-title').value;
+  const uploadMsg = document.getElementById('upload-msg');
+  const user = firebase.auth().currentUser;
+  if (!file) {
+    uploadMsg.textContent = "Selecciona un video.";
+    return;
+  }
+  if (!title) {
+    uploadMsg.textContent = "Ponle un título al video.";
+    return;
+  }
+  const storageRef = firebase.storage().ref('videos/' + user.uid + '/' + Date.now() + '_' + file.name);
+  uploadMsg.textContent = "Subiendo...";
+  storageRef.put(file).then(snapshot => {
+    snapshot.ref.getDownloadURL().then(url => {
+      firebase.firestore().collection('videos').add({
+        url,
+        userId: user.uid,
+        userEmail: user.email,
+        titulo: title,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      uploadMsg.textContent = "¡Video subido!";
+      document.getElementById('video-upload').value = "";
+      document.getElementById('video-title').value = "";
+      buscarVideos();
+    });
+  }).catch(e => uploadMsg.textContent = e.message);
+}
 }

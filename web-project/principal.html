@@ -11,17 +11,25 @@
 </head>
 <body class="principal">
   <header>
-  <div id="user-profile">
-    <span id="user-email"></span>
-    <button onclick="logout()">Cerrar sesión</button>
-  </div>
-  <h1>Bienvenido a la Página Principal</h1>
-
-
+    <div id="user-profile">
+      <span id="user-email"></span>
+      <button onclick="logout()">Cerrar sesión</button>
+    </div>
+    <h1>Bienvenido a la Página Principal</h1>
+  </header>
 
   <section id="buscador-section">
     <input type="text" id="buscador" placeholder="Buscar videos por usuario o título...">
     <button onclick="buscarVideos()">Buscar</button>
+  </section>
+
+  <!-- SECCIÓN PARA SUBIR VIDEO -->
+  <section id="subir-video-section">
+    <h2>Subir Video</h2>
+    <input type="file" id="video-upload" accept="video/*">
+    <input type="text" id="video-title" placeholder="Título del video">
+    <button onclick="uploadVideo()">Subir</button>
+    <p id="upload-msg"></p>
   </section>
 
   <section id="videos-section">
@@ -66,6 +74,39 @@
           videosList.innerHTML = "No se encontraron videos.";
         }
       });
+    }
+
+    // Subir video
+    function uploadVideo() {
+      const file = document.getElementById('video-upload').files[0];
+      const title = document.getElementById('video-title').value;
+      const uploadMsg = document.getElementById('upload-msg');
+      const user = firebase.auth().currentUser;
+      if (!file) {
+        uploadMsg.textContent = "Selecciona un video.";
+        return;
+      }
+      if (!title) {
+        uploadMsg.textContent = "Ponle un título al video.";
+        return;
+      }
+      const storageRef = firebase.storage().ref('videos/' + user.uid + '/' + Date.now() + '_' + file.name);
+      uploadMsg.textContent = "Subiendo...";
+      storageRef.put(file).then(snapshot => {
+        snapshot.ref.getDownloadURL().then(url => {
+          firebase.firestore().collection('videos').add({
+            url,
+            userId: user.uid,
+            userEmail: user.email,
+            titulo: title,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          uploadMsg.textContent = "¡Video subido!";
+          document.getElementById('video-upload').value = "";
+          document.getElementById('video-title').value = "";
+          buscarVideos();
+        });
+      }).catch(e => uploadMsg.textContent = e.message);
     }
 
     // Cargar todos los videos al entrar
