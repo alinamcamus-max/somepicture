@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Página Principal</title>
+  <link rel="stylesheet" href="styles/style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+<body class="principal">
+  <header>
+    <h1>Bienvenido a la Página Principal</h1>
+    <div id="user-profile">
+      <span id="user-email"></span>
+      <button onclick="logout()">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <section id="buscador-section">
+    <input type="text" id="buscador" placeholder="Buscar videos por usuario o título...">
+    <button onclick="buscarVideos()">Buscar</button>
+  </section>
+
+  <section id="videos-section">
+    <h2>Videos</h2>
+    <div id="videos-list"></div>
+  </section>
+
+  <script src="scripts/main.js"></script>
+  <script>
+    // Mostrar email del usuario
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (user) {
+        document.getElementById('user-email').textContent = user.email;
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+
+    // Buscar videos
+    function buscarVideos() {
+      const query = document.getElementById('buscador').value.toLowerCase();
+      const videosList = document.getElementById('videos-list');
+      videosList.innerHTML = "Buscando...";
+      firebase.firestore().collection('videos').orderBy('createdAt', 'desc').get().then(snapshot => {
+        videosList.innerHTML = '';
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const titulo = data.titulo ? data.titulo.toLowerCase() : '';
+          const email = data.userEmail ? data.userEmail.toLowerCase() : '';
+          if (titulo.includes(query) || email.includes(query)) {
+            const video = document.createElement('video');
+            video.src = data.url;
+            video.controls = true;
+            video.style.width = "100%";
+            videosList.appendChild(video);
+            const info = document.createElement('div');
+            info.textContent = `Subido por: ${data.userEmail} ${data.titulo ? ' | Título: ' + data.titulo : ''}`;
+            videosList.appendChild(info);
+          }
+        });
+        if (!videosList.hasChildNodes()) {
+          videosList.innerHTML = "No se encontraron videos.";
+        }
+      });
+    }
+
+    // Cargar todos los videos al entrar
+    buscarVideos();
+
+    // Cerrar sesión
+    function logout() {
+      firebase.auth().signOut().then(() => {
+        window.location.href = "index.html";
+      });
+    }
+  </script>
+</body>
+</html>
