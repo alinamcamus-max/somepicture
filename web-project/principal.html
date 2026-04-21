@@ -37,7 +37,22 @@
     <div id="videos-list"></div>
   </section>
 
-  <script src="scripts/main.js"></script>
+  <!-- Botón flotante de chat -->
+  <button id="chat-fab" onclick="toggleChat()" title="Abrir chat">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff">
+      <path d="M20 2H4C2.897 2 2 2.897 2 4v14c0 1.103 0.897 2 2 2h14l4 4V4c0-1.103-0.897-2-2-2z"/>
+    </svg>
+  </button>
+
+  <!-- Sección de chat oculta por defecto -->
+  <section id="chat-section" style="display:none;">
+    <h2>Chat</h2>
+    <div id="chat-messages" style="height:200px;overflow-y:auto;border:1px solid #ccc;margin-bottom:10px;background:#fafafa;padding:10px;border-radius:4px;"></div>
+    <input type="text" id="chat-input" placeholder="Escribe tu mensaje...">
+    <button onclick="sendMessage()">Enviar</button>
+    <button onclick="toggleChat()">Cerrar chat</button>
+  </section>
+
   <script>
     // Mostrar email del usuario
     firebase.auth().onAuthStateChanged(function(user) {
@@ -117,6 +132,21 @@
       firebase.auth().signOut().then(() => {
         window.location.href = "index.html";
       });
+    }
+
+    // Mostrar/Ocultar chat
+    function toggleChat() {
+      const chatSection = document.getElementById('chat-section');
+      if (chatSection.style.display === 'none' || !chatSection.style.display) {
+        chatSection.style.display = 'block';
+      } else {
+        chatSection.style.display = 'none';
+      }
+    }
+
+    // Ejemplo de función para enviar mensaje
+    function sendMessage() {
+      alert("Funcionalidad de chat por implementar.");
     }
   </script>
 </body>

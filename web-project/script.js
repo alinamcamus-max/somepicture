@@ -194,5 +194,13 @@ function generarId() {
       buscarVideos();
     });
   }).catch(e => uploadMsg.textContent = e.message);
+function toggleChat() {
+  const chatSection = document.getElementById('chat-section');
+  if (chatSection.style.display === 'none' || !chatSection.style.display) {
+    chatSection.style.display = 'block';
+  } else {
+    chatSection.style.display = 'none';
+  }
+}
 }
 }
