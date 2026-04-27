@@ -1,7 +1,7 @@
 body {
   font-family: 'Arial Narrow', Arial, sans-serif;
-  background: #b3c6f7; /* azul pastel */
-  color: #3d0066;      /* morado oscuro */
+  background: #b3c6f7;
+  color: #3d0066;
   margin: 30px;
 }
 #auth-section, #main-section {
@@ -26,6 +26,7 @@ button {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  transition: background 0.2s;
 }
 button:hover {
   background: #1565c0;
@@ -45,11 +46,10 @@ button:hover {
   border-radius: 4px;
 }
 
-/* --- BOTÓN FLOTANTE DE CHAT --- */
-#chat-fab {
+/* --- BOTONES FLOTANTES --- */
+#amigos-fab, #chat-fab {
   position: fixed;
   bottom: 30px;
-  right: 30px;
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -60,14 +60,70 @@ button:hover {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 100;
+  z-index: 101;
   padding: 0;
   transition: background 0.2s;
 }
-#chat-fab:hover {
+#amigos-fab {
+  right: 84px; /* Separado del chat-fab */
+}
+#chat-fab {
+  right: 30px;
+}
+#amigos-fab:hover, #chat-fab:hover {
   background: #1565c0;
 }
-#chat-fab svg {
+#amigos-fab svg, #chat-fab svg {
   display: block;
   margin: auto;
+}
+
+/* --- LISTA DE AMIGOS FLOTANTE --- */
+#amigos-section {
+  position: fixed;
+  bottom: 84px;
+  right: 30px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  padding: 16px;
+  z-index: 102;
+  min-width: 220px;
+}
+#amigos-section h3, #amigos-section h4 {
+  margin-top: 0;
+  font-size: 16px;
+}
+#amigos-list, #bloqueados-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px 0;
+}
+#amigos-list li, #bloqueados-list li {
+  padding: 6px 10px;
+  border-radius: 4px;
+  background: #e3e7fa;
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#amigos-list li:hover, #bloqueados-list li:hover {
+  background: #b3c6f7;
+}
+#amigos-list button {
+  background: #e53935;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin-left: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s;
+}
+#amigos-list button:hover {
+  background: #b71c1c;
 }

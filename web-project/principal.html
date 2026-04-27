@@ -37,6 +37,24 @@
     <div id="videos-list"></div>
   </section>
 
+  <!-- Lista de amigos flotante mejorada -->
+  <div id="amigos-section" style="display:none;">
+    <h3>Mis amigos</h3>
+    <ul id="amigos-list"></ul>
+    <h4>Agregar amigo</h4>
+    <input type="email" id="nuevo-amigo-email" placeholder="Correo del amigo">
+    <button onclick="agregarAmigo()">Añadir</button>
+    <h4>Bloqueados</h4>
+    <ul id="bloqueados-list"></ul>
+  </div>
+
+  <!-- Botón flotante de amigos -->
+  <button id="amigos-fab" onclick="toggleAmigos()" title="Ver amigos">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff">
+      <path d="M12 12c2.7 0 8 1.34 8 4v2H4v-2c0-2.66 5.3-4 8-4zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm7.5 8c.83 0 1.5.67 1.5 1.5S20.33 21 19.5 21s-1.5-.67-1.5-1.5S18.67 18 19.5 18zm-15 0c.83 0 1.5.67 1.5 1.5S5.33 21 4.5 21 3 20.33 3 19.5 3.67 18 4.5 18z"/>
+    </svg>
+  </button>
+
   <!-- Botón flotante de chat -->
   <button id="chat-fab" onclick="toggleChat()" title="Abrir chat">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff">
@@ -54,10 +72,16 @@
   </section>
 
   <script>
-    // Mostrar email del usuario
+    // Mostrar email del usuario y actualizar estado online
     firebase.auth().onAuthStateChanged(function(user) {
       if (user) {
         document.getElementById('user-email').textContent = user.email;
+        firebase.firestore().collection('users').doc(user.uid).set({
+          email: user.email,
+          online: true
+        }, { merge: true });
+        cargarAmigos();
+        cargarBloqueados();
       } else {
         window.location.href = "index.html";
       }
@@ -127,11 +151,18 @@
     // Cargar todos los videos al entrar
     buscarVideos();
 
-    // Cerrar sesión
+    // Cerrar sesión y marcar offline
     function logout() {
-      firebase.auth().signOut().then(() => {
-        window.location.href = "index.html";
-      });
+      const user = firebase.auth().currentUser;
+      if (user) {
+        firebase.firestore().collection('users').doc(user.uid).set({
+          online: false
+        }, { merge: true }).then(() => {
+          firebase.auth().signOut().then(() => {
+            window.location.href = "index.html";
+          });
+        });
+      }
     }
 
     // Mostrar/Ocultar chat
@@ -142,6 +173,112 @@
       } else {
         chatSection.style.display = 'none';
       }
+    }
+
+    // Mostrar/Ocultar amigos
+    function toggleAmigos() {
+      const amigosSection = document.getElementById('amigos-section');
+      if (amigosSection.style.display === 'none' || !amigosSection.style.display) {
+        amigosSection.style.display = 'block';
+        cargarAmigos();
+        cargarBloqueados();
+      } else {
+        amigosSection.style.display = 'none';
+      }
+    }
+
+    // Cargar lista de amigos
+    function cargarAmigos() {
+      const user = firebase.auth().currentUser;
+      const amigosList = document.getElementById('amigos-list');
+      amigosList.innerHTML = "Cargando...";
+      firebase.firestore().collection('users').doc(user.uid).collection('amigos')
+        .get()
+        .then(snapshot => {
+          amigosList.innerHTML = '';
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const li = document.createElement('li');
+            li.textContent = data.email;
+            // Botón para bloquear
+            const btnBlock = document.createElement('button');
+            btnBlock.textContent = "Bloquear";
+            btnBlock.style.marginLeft = "10px";
+            btnBlock.onclick = () => bloquearAmigo(data.email);
+            li.appendChild(btnBlock);
+            amigosList.appendChild(li);
+          });
+          if (!amigosList.hasChildNodes()) {
+            amigosList.innerHTML = "<li>No tienes amigos agregados.</li>";
+          }
+        });
+    }
+
+    // Agregar amigo por email
+    function agregarAmigo() {
+      const user = firebase.auth().currentUser;
+      const email = document.getElementById('nuevo-amigo-email').value.trim().toLowerCase();
+      if (!email || email === user.email) {
+        alert("Ingresa un correo válido que no sea el tuyo.");
+        return;
+      }
+      // Verifica si el usuario existe
+      firebase.firestore().collection('users').where('email', '==', email).get().then(snapshot => {
+        if (snapshot.empty) {
+          alert("Usuario no encontrado.");
+          return;
+        }
+        // Agrega a la subcolección de amigos
+        firebase.firestore().collection('users').doc(user.uid).collection('amigos').doc(email).set({
+          email: email
+        }).then(() => {
+          document.getElementById('nuevo-amigo-email').value = "";
+          cargarAmigos();
+          alert("¡Amigo agregado!");
+        });
+      });
+    }
+
+    // Bloquear amigo
+    function bloquearAmigo(email) {
+      const user = firebase.auth().currentUser;
+      // Elimina de amigos y agrega a bloqueados
+      firebase.firestore().collection('users').doc(user.uid).collection('amigos').doc(email).delete().then(() => {
+        firebase.firestore().collection('users').doc(user.uid).collection('bloqueados').doc(email).set({
+          email: email
+        }).then(() => {
+          cargarAmigos();
+          cargarBloqueados();
+          alert("Usuario bloqueado.");
+        });
+      });
+    }
+
+    // Cargar lista de bloqueados
+    function cargarBloqueados() {
+      const user = firebase.auth().currentUser;
+      const bloqueadosList = document.getElementById('bloqueados-list');
+      bloqueadosList.innerHTML = "Cargando...";
+      firebase.firestore().collection('users').doc(user.uid).collection('bloqueados')
+        .get()
+        .then(snapshot => {
+          bloqueadosList.innerHTML = '';
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const li = document.createElement('li');
+            li.textContent = data.email;
+            bloqueadosList.appendChild(li);
+          });
+          if (!bloqueadosList.hasChildNodes()) {
+            bloqueadosList.innerHTML = "<li>No tienes usuarios bloqueados.</li>";
+          }
+        });
+    }
+
+    // Función para abrir chat con un amigo (puedes personalizarla)
+    function abrirChatCon(email) {
+      toggleChat();
+      document.getElementById('chat-messages').innerHTML = `<b>Chat con ${email}</b><br>(Funcionalidad por implementar)`;
     }
 
     // Ejemplo de función para enviar mensaje
