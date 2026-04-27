@@ -65,6 +65,11 @@
   <!-- Sección de chat oculta por defecto -->
   <section id="chat-section" style="display:none;">
     <h2>Chat</h2>
+    <!-- Lista de chats frecuentados -->
+    <div id="chats-section" style="margin-bottom:10px;">
+      <h4>Mis chats</h4>
+      <ul id="chats-list"></ul>
+    </div>
     <div id="chat-messages" style="height:200px;overflow-y:auto;border:1px solid #ccc;margin-bottom:10px;background:#fafafa;padding:10px;border-radius:4px;"></div>
     <input type="text" id="chat-input" placeholder="Escribe tu mensaje...">
     <button onclick="sendMessage()">Enviar</button>
@@ -72,6 +77,9 @@
   </section>
 
   <script>
+    let chatUnsubscribe = null;
+    let chatActual = null;
+
     // Mostrar email del usuario y actualizar estado online
     firebase.auth().onAuthStateChanged(function(user) {
       if (user) {
@@ -82,6 +90,7 @@
         }, { merge: true });
         cargarAmigos();
         cargarBloqueados();
+        cargarChats();
       } else {
         window.location.href = "index.html";
       }
@@ -170,8 +179,11 @@
       const chatSection = document.getElementById('chat-section');
       if (chatSection.style.display === 'none' || !chatSection.style.display) {
         chatSection.style.display = 'block';
+        cargarChats();
       } else {
         chatSection.style.display = 'none';
+        if (chatUnsubscribe) chatUnsubscribe();
+        chatActual = null;
       }
     }
 
@@ -239,7 +251,7 @@
       });
     }
 
-    // Bloquear amigo
+    // Bloquear amigo o usuario de chat
     function bloquearAmigo(email) {
       const user = firebase.auth().currentUser;
       // Elimina de amigos y agrega a bloqueados
@@ -251,6 +263,16 @@
           cargarBloqueados();
           alert("Usuario bloqueado.");
         });
+      });
+    }
+    function bloquearUsuarioChat(email) {
+      const user = firebase.auth().currentUser;
+      firebase.firestore().collection('users').doc(user.uid).collection('bloqueados').doc(email).set({
+        email: email
+      }).then(() => {
+        cargarBloqueados();
+        alert("Usuario bloqueado.");
+        cargarChats();
       });
     }
 
@@ -275,15 +297,111 @@
         });
     }
 
-    // Función para abrir chat con un amigo (puedes personalizarla)
-    function abrirChatCon(email) {
-      toggleChat();
-      document.getElementById('chat-messages').innerHTML = `<b>Chat con ${email}</b><br>(Funcionalidad por implementar)`;
+    // ----------- CHATS FRECUENTADOS Y MENSAJES -----------
+
+    // Cargar lista de chats frecuentados (ordenados por cantidad de mensajes)
+    function cargarChats() {
+      const user = firebase.auth().currentUser;
+      const chatsList = document.getElementById('chats-list');
+      if (!chatsList) return;
+      chatsList.innerHTML = "Cargando...";
+      firebase.firestore().collection('chats')
+        .where('participants', 'array-contains', user.email)
+        .get()
+        .then(async snapshot => {
+          let chats = [];
+          for (const doc of snapshot.docs) {
+            const data = doc.data();
+            const otros = data.participants.filter(e => e !== user.email);
+            if (otros.length > 0) {
+              const amigo = otros[0];
+              // Contar mensajes
+              const mensajesSnap = await firebase.firestore().collection('chats').doc(doc.id).collection('messages').get();
+              chats.push({
+                email: amigo,
+                chatId: doc.id,
+                mensajes: mensajesSnap.size
+              });
+            }
+          }
+          // Ordenar por cantidad de mensajes (más usado primero)
+          chats.sort((a, b) => b.mensajes - a.mensajes);
+          chatsList.innerHTML = '';
+          chats.forEach(chat => {
+            const li = document.createElement('li');
+            li.style.display = "flex";
+            li.style.alignItems = "center";
+            // Nombre del amigo
+            const span = document.createElement('span');
+            span.textContent = `${chat.email} (${chat.mensajes} mensajes)`;
+            span.style.flex = "1";
+            span.style.cursor = "pointer";
+            span.onclick = () => abrirChatCon(chat.email);
+            li.appendChild(span);
+            // Botón bloquear
+            const btnBlock = document.createElement('button');
+            btnBlock.textContent = "Bloquear";
+            btnBlock.style.marginLeft = "10px";
+            btnBlock.onclick = (e) => {
+              e.stopPropagation();
+              bloquearUsuarioChat(chat.email);
+            };
+            li.appendChild(btnBlock);
+            chatsList.appendChild(li);
+          });
+          if (!chatsList.hasChildNodes()) {
+            chatsList.innerHTML = "<li>No tienes chats aún.</li>";
+          }
+        });
     }
 
-    // Ejemplo de función para enviar mensaje
+    // Abrir chat con un usuario y mostrar historial
+    function abrirChatCon(email) {
+      toggleChat();
+      chatActual = email;
+      cargarMensajes(email);
+    }
+
+    // Cargar mensajes del chat seleccionado
+    function cargarMensajes(email) {
+      const user = firebase.auth().currentUser;
+      const chatId = [user.email, email].sort().join('_');
+      const chatMessages = document.getElementById('chat-messages');
+      if (chatUnsubscribe) chatUnsubscribe();
+      chatUnsubscribe = firebase.firestore().collection('chats').doc(chatId)
+        .collection('messages').orderBy('createdAt')
+        .onSnapshot(snapshot => {
+          chatMessages.innerHTML = '';
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const div = document.createElement('div');
+            div.textContent = `${data.sender}: ${data.message}`;
+            chatMessages.appendChild(div);
+          });
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+    }
+
+    // Enviar mensaje al chat seleccionado
     function sendMessage() {
-      alert("Funcionalidad de chat por implementar.");
+      const user = firebase.auth().currentUser;
+      const input = document.getElementById('chat-input');
+      const msg = input.value.trim();
+      const email = chatActual;
+      if (!msg || !email) return;
+      const chatId = [user.email, email].sort().join('_');
+      const chatRef = firebase.firestore().collection('chats').doc(chatId);
+      // Asegura que el chat existe y agrega participantes
+      chatRef.set({
+        participants: [user.email, email]
+      }, { merge: true }).then(() => {
+        chatRef.collection('messages').add({
+          sender: user.email,
+          message: msg,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        input.value = '';
+      });
     }
   </script>
 </body>
